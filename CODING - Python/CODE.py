@@ -6,8 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-df_info = pd.read_csv("delhi_information.csv")
-df_prices= pd.read_csv("delhi_prices.csv")
+df_info = pd.read_csv("DATASET/delhi_information.csv")
+df_prices = pd.read_csv("DATASET/delhi_prices.csv")
 
 df_info.info ()
 df_info.head()
@@ -597,28 +597,28 @@ coef_df['variable'].value_counts()
 
 
 # SAME REGRESSION BUT NOT TO PREDICT BUT TO INFERE ON OUR DATA
-
+import sklearn
 import statsmodels.api as sm
 
 # =========================
 # 1) Definisci y (log target)
 # =========================
-y = np.log(df_regression2['Fare (Rupees)'])
+y2 = np.log(df_regression2['Fare (Rupees)'])
 
 # =========================
 # 2) Definisci X (features)
 # =========================
-X = df_regression2.drop(columns=['Fare (Rupees)'])
+X2 = df_regression2.drop(columns=['Fare (Rupees)'])
 
 # =========================
 # 3) Aggiungi intercetta
 # =========================
-X_sm = sm.add_constant(X)
+X_sm = sm.add_constant(X2)
 
 # =========================
 # 4) Stima OLS
 # =========================
-model = sm.OLS(y, X_sm)
+model = sm.OLS(y2, X_sm)
 results = model.fit()
 
 # =========================
