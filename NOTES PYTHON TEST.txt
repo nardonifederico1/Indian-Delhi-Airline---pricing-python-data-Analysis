@@ -1,0 +1,163 @@
+###################
+# I) CLEAN DATA
+###################
+
+# library
+import pandas as pd
+
+#import from excel
+df = pd.read_excel ( r"DIRECTORY")
+df = pd.read_csv ( r"DIRECTORY")
+
+#delete same rows
+df = df.drop_duplicates()
+
+
+#delete specific column
+df= df.drop( columns = "NAME COLUMN")
+
+#delete specific symbols from a specific column
+df ["NAME COLUMN"].str.strip("SPECIFIC SYMBOLS")
+
+#replace specific symbol with nothing
+df ["NAME COLUMN"].str.replace("^a-zA-zO-9","")
+
+
+#cambiare ogni singolo valore di una Colonna in una dtirnga e non float
+df ["NAME COLUMN"].apply( lambda x:str(x))
+
+
+#creating new columns from data divdided by , for only 1 time
+df [["NEW NAME 1" , "NEW NAME 2" ]] = df ["NAME COLUMN"].str.split("," , 1, expand =True)
+
+
+#change a symbol into another
+
+df["NAME COLUMN" ].str.replace ("FIND SYMBOL " , "REPLACE WITH") 
+
+
+# if the column has Y as value delete that row
+
+for in df.index : 
+df.loc [x, "NAME COLUMN"] == "SPECIFIC VALUE Y" 
+df.drop( x, inplace = True)
+
+##########################################################################################################################################
+
+##########################################################################################################################################
+#HEATMAPS AND CORRELATIONS
+########################
+
+correlation_matrix = df.corr(method ="pearson") 
+sns.heatmap (correlation_matrix, annot= True)
+plt.title "TILTE")
+plt.xlabel("VAR X")
+plt.ylabel ("VAR Y")
+plt.show ()
+
+
+
+###SCATTERPLOT
+
+sns.regplot(x="NAME COLUMN 1", y="NAME COLUMN 2", df = name dataset, scatter_kws={"color":"red"}, line_kws  {"color": "blue"})
+##########################################################################################################################################
+#LM MODEL
+########################
+
+import seaborn as sns
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+# SCATTERPLOT REGRESSION
+#size 
+plt.figure ( figsize= (10,6))
+
+#scatterplot
+
+#VERSION 1!!!!!
+sns.scatterplot ( x= "NAME VAR X" , y=" NAME VAR Y", data= name dataframe , color= "blue") 
+plt.xlabel ( "NAME X VAR")
+plt.ylabel ("NAME Y VAR")
+plt.title("TITLE")
+plt.show()
+
+
+
+#VERSION 2 !!!
+
+sns.lmplot( x= "VAR X", y="VAR Y", data = dataframe, scatter_kws= {"alpha": 0.3})
+
+from sklearn.model_selection import train_test_split
+
+X= df [["VAR X1", "VAR X2" ecc ]]
+Y = df ["VAR Y"]
+
+#NOW SPLIT TEST for the overfitting
+
+X_train , X_test , y_train, y_test = train_test_split ( X, y, test_size= .3, random_state= 2)
+
+
+from sklearn.linear_model import LinearRegression
+
+lr = LinearRegression()
+lm.fit (X_train, y_train) # create my model
+
+lm.coecf #shows coefficients all the betas of Xs
+
+cdf= pd.DataFrame(lm.coef, X.columns, columns = ["coef"]) # create an ad hoc version 
+print(cdf)
+
+#PREDICTIONS
+predictions = lm.predict(X_test)
+print(predictions)
+#list of all predictions of y basing on X given 70%
+
+sns.scatterplot(predictions, y_test)
+plt.xlabel("predictions")
+plt.title("EVALUATION OF LM MODEL") # as normal as possible with error under estimates
+
+#ERROR ESTIMATION
+
+from sklearn.metrics import mean_squared_error, mean_absolute_error )
+
+print("Mean absolute rror:" , mean_absolute_error(y_test, predictions)) #finds difference among predictions and the sample created, it should be minimal
+
+#RESIDUALS
+
+residuals= y_test - predictions
+sns.displot(residuals, bins= 20, kde=True) #they should be normal
+
+
+#QQ PLOT, JB , skewnee kurtodis
+
+#JB TEST
+jb_stat, jb_p = jarque_bera(x)
+
+#SKEWNESS / KURTOSIS
+sk= skew(x, bias = False)
+kurtosis_excess = kurtosis(x, Fisher= True, bias = False)
+
+print(f"JB STAT: jb_stat = {jb_stat:.4f}, p-value = {jb_p:.4g})"
+print(f" skewness = {sk:.4f}, kurtosis = {kurtosis_excess:.4g})"
+
+#QQ PLOT
+fig2, ax2 = plt. subplots()
+stats.probplot (x, dist="norm" ,plot =ax2)
+ax2.settitle ( "QQ-PLOT")
+plt.show()
+
+
+
+
+
+###################################################################################################################################################
+from sklearn.model_selection import train_test_split
+
+lr = LinearRegression()
+lr.fit (VAR X, VAR Y)
+#R^2
+lr.score(VAR X, VAR Y)
+
+
