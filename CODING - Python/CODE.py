@@ -593,35 +593,147 @@ coef_df['variable'].value_counts()
 
 
 
+df_regression2.head
+df_regression2.info
+df_regression2.columns
 
+df_shrinked = df_regression2.drop (columns = ['Day_Monday', 'Day_Saturday', 'Day_Sunday',
+       'Day_Thursday', 'Day_Tuesday', 'Day_Wednesday','Airline_AirAsia',
+       'Airline_AkasaAir', 'Airline_AllianceAir', 'Airline_GO FIRST',
+       'Airline_Indigo', 'Airline_SpiceJet', 'Airline_Vistara','Class_Economy', 'Class_First', 'Class_Premium Economy','Destination_Bangalore', 'Destination_Chennai',
+       'Destination_Hyderabad', 'Destination_Kolkata', 'Destination_Mumbai'])
+df_shrinked.columns
 
+print(df_shrinked.dtypes)
 
 # SAME REGRESSION BUT NOT TO PREDICT BUT TO INFERE ON OUR DATA
 import sklearn
 import statsmodels.api as sm
 
-# =========================
 # 1) Definisci y (log target)
-# =========================
 y2 = np.log(df_regression2['Fare (Rupees)'])
 
-# =========================
-# 2) Definisci X (features)
-# =========================
-X2 = df_regression2.drop(columns=['Fare (Rupees)'])
 
-# =========================
+# 2) Definisci X (features)
+X2 = df_regression2.drop(columns=['Fare (Rupees)'
+                                  ])
+
+X2= X2.astype(float)
+
 # 3) Aggiungi intercetta
-# =========================
 X_sm = sm.add_constant(X2)
 
-# =========================
 # 4) Stima OLS
-# =========================
 model = sm.OLS(y2, X_sm)
 results = model.fit()
 
-# =========================
+
 # 5) Output completo
-# =========================
 print(results.summary())
+
+
+# to avoid the dummy trap this is the benchmark category: days = Friday | company = AirIndia | Class = Business | Departure time = 12 PM - 6 PM | destination = Delhi
+
+#################
+#QUALITY CHECKS 
+#################
+
+#1° MULTICOLLINEARITY
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+plt.figure(figsize=(16, 10)) 
+
+correlation_matrix2 = df_regression2.corr(method ="pearson") 
+sns.heatmap (correlation_matrix2, 
+            annot=True, 
+            fmt=".2f",      # Solo 2 decimali per occupare meno spazio
+            cmap='coolwarm', 
+            annot_kws={"size": 7}, # <--- Rimpicciolisce i numeri dentro i quadrati
+            linewidths=0.5)
+
+plt.title ("CORRELATION MATRIX")
+plt.xlabel("VAR X")
+plt.ylabel ("VAR Y")
+plt.xticks(fontsize=8, rotation=45) # Rimpicciolisce le etichette X
+plt.yticks(fontsize=8)              # Rimpicciolisce le etichette Y
+plt.show()
+
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+
+vif_data = pd.DataFrame()
+vif_data["feature"] = X_sm.columns
+vif_data["VIF"] = [variance_inflation_factor(X_sm.values, i) for i in range(len(X_sm.columns))]
+print(vif_data)
+
+#No strong multicollinearity observable in the regression dataset
+
+#2° RESIDUALS vs FITTED VALUES (LINEARITY)
+import statsmodels.api as sm
+
+fitted_values=results.fittedvalues
+residuals = results.resid
+
+plt.figure(figsize=(12, 10))
+plt.subplot(2, 2, 1)
+sns.residplot(x=fitted_values, y=residuals, lowess=True, 
+              scatter_kws={'alpha': 0.3}, line_kws={'color': 'red'})
+plt.title('Residuals vs Fitted')
+plt.xlabel('Fitted values')
+plt.ylabel('Residuals')
+plt.show()
+
+# 3° NORMALITY OF RESIDUALS
+# QQ- PLOT NORMALITY and Jarque Berat (11049.469 really high therefore residuals are not normal probably)
+from scipy import stats
+
+plt.figure(figsize=(8, 6))
+stats.probplot(residuals, dist="norm", plot=plt)
+plt.title('Normal Q-Q Plot')
+plt.show()
+
+#While the Normal Q-Q Plot and the Jarque-Bera test ($11049.469$, $p < 0.001$) 
+# indicate that the residuals are not perfectly normal due to heavy tails, this is a direct reflection of "edge-case" market realities—specifically high-yield business fares and last-minute booking spikes that the log-linear transformation cannot fully flatten.
+# From a statistical standpoint, given our large sample size ($N = 82,481$), the Central Limit Theorem ensures that the coefficient estimates ($\beta$) remain valid, consistent, and reliable for inference. 
+# From a commercial perspective, these outliers represent genuine market behavior rather than measurement errors. Retaining them is a deliberate strategic choice: while removing them might "clean" the statistical metrics, it would compromise the model's practical utility by ignoring the most significant revenue-generating segments of the airline industry.
+
+#4° OMOSCHEDASTICITY
+
+# Calcolo residui standardizzati
+influence = results.get_influence()
+standardized_residuals = influence.resid_studentized_internal
+
+# Scale-Location Plot
+plt.figure(figsize=(8, 6))
+# Calcolo dei residui standardizzati per la diagnostica
+influence = results.get_influence()
+std_residuals = influence.resid_studentized_internal
+
+# Calcolo necessario prima del grafico
+influence = results.get_influence()
+std_residuals = influence.resid_studentized_internal
+
+# Ora il grafico funzionerà
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+plt.figure(figsize=(8, 6))
+plt.scatter(results.fittedvalues, np.sqrt(np.abs(std_residuals)), alpha=0.3)
+sns.regplot(x=results.fittedvalues, y=np.sqrt(np.abs(std_residuals)), 
+            lowess=True, scatter=False, line_kws={'color': 'red'})
+plt.title('Scale-Location Plot')
+plt.xlabel('Fitted values (Predicted Log-Fare)')
+plt.ylabel('√|Standardized Residuals|')
+plt.show()
+
+#5° AUTOCORRELATION OF RESIDUALS
+
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
+
+# Generazione del grafico Residuals vs Leverage
+plt.figure(figsize=(10, 7))
+sm.graphics.influence_plot(results, criterion="cooks", alpha=0.5)
+plt.title('Residuals vs Leverage (Influence Plot)')
+plt.show()
